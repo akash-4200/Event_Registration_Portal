@@ -5,28 +5,6 @@ raw SQL (SQLite)**, and a lightweight **Flask (Python)** backend connecting
 them — three roles (Student, Organizer, Admin), QR-code tickets, CSV/PDF
 exports, a live QR attendance scanner, and dark/light mode.
 
-> **Want to deploy this?** See [`DEPLOYMENT.md`](DEPLOYMENT.md) for a
-> tested, step-by-step guide to deploying on Render (free tier), including
-> the persistent-disk setup needed so your data survives restarts.
-
-> **Scope note (read this first):** the original feature list ran to 106
-> items. Building every single one as a fully separate, production-grade
-> feature isn't realistic in one project — so instead of faking breadth with
-> stub pages, this implements a genuinely working system covering every
-> phase, with a few items intentionally simplified and clearly flagged below
-> (see **What's Simplified / Not Included**). Everything listed as
-> "implemented" was actually run end-to-end and tested before being handed
-> to you — not just written and assumed to work.
-
-## Why raw SQL instead of an ORM
-
-You listed **SQL** as a skill, not just "a database" — so this project uses
-plain `sqlite3` with parameterized queries throughout (`db.py`, `schema.sql`),
-instead of hiding everything behind SQLAlchemy. That means you can actually
-point to real `JOIN`s, `GROUP BY` aggregates, and `CHECK` constraints in
-`schema.sql` and `admin/routes.py` and explain them in an interview — which
-is a stronger signal than "I used an ORM and it handled the SQL for me."
-
 ## Features Implemented
 
 **Phase 1 — Authentication**
@@ -184,30 +162,3 @@ again.
   **automatically promoted** to confirmed and notified — this is the
   "Auto Seat Allocation" feature, implemented as a small piece of logic
   in `student/routes.py::cancel_registration`, not a background job.
-
-## Testing Notes
-
-Every route across all three roles (auth, student, organizer, admin) was
-exercised with Flask's test client before this was handed to you,
-including: the full register → ticket → receipt → cancel → waitlist
-promotion flow, CSV export, PDF certificate generation, RBAC enforcement
-(a student hitting `/admin/dashboard` correctly gets a 403), blocked-user
-login rejection, and a SQL-injection login attempt (correctly rejected,
-since every query uses `?` placeholders — see `db.py`).
-
-## Talking Points for an Interview
-
-- **Why raw SQL over an ORM** — direct control over joins/aggregates for
-  the reporting queries; a stronger demonstration of SQL fundamentals.
-- **RBAC as decorators** (`decorators.py`) rather than checking roles
-  inline in every route — keeps authorization logic in one place and
-  makes each route's access requirement visible at a glance.
-- **Waitlist auto-promotion** — a concrete example of a business rule
-  (not just CRUD) implemented directly in the cancellation flow.
-- **Security tradeoffs made explicit** — e.g., login/registration errors
-  are deliberately generic ("invalid email or password") to avoid
-  leaking which accounts exist; forgot-password always shows the same
-  message regardless of whether the email is registered.
-- **What you'd add with more time/infra** — real email delivery, a
-  payment gateway, multi-photo event galleries, and possibly moving
-  from SQLite to PostgreSQL for concurrent write load at scale.
