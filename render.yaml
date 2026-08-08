@@ -1,0 +1,32 @@
+# render.yaml
+# ---------------------------------------------------------------------------
+# Render "Blueprint" file -- lets you deploy this whole service (including
+# the persistent disk it needs for the database and uploaded files) in one
+# step via Render's "New +" -> "Blueprint" flow, instead of configuring
+# each setting by hand in the dashboard.
+#
+# This is optional: you can also just create a Web Service manually in the
+# Render dashboard and set the equivalent settings yourself (see
+# DEPLOYMENT.md for the manual steps and what each of these maps to).
+# ---------------------------------------------------------------------------
+
+services:
+  - type: web
+    name: event-registration-portal
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --workers 2 --threads 4 --timeout 60"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render generates a random secret for you
+      - key: DATA_DIR
+        value: /var/data              # matches the disk mount path below
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+    disk:
+      name: event-portal-data
+      mountPath: /var/data            # persistent across deploys/restarts
+      sizeGB: 1                        # free tier minimum; plenty for this project
