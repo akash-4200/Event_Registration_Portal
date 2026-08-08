@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Manage Events{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>Manage Events</h1>
+</div>
+
+<form method="GET" class="search-filter-bar">
+    <div class="form-group">
+        <label for="status">Filter by status</label>
+        <select id="status" name="status" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+    </div>
+</form>
+
+{% if events %}
+    {% for event in events %}
+    <div class="event-card">
+        <div class="event-card-body">
+            <div class="event-card-title">{{ event.title }}</div>
+            <div class="event-card-meta">
+                <span class="tag-pill tag-pill-status-{{ event.status }}">{{ event.status|capitalize }}</span>
+                {% if event.category_name %}<span class="tag-pill">{{ event.category_name }}</span>{% endif %}
+                <span>By {{ event.organizer_name }}</span>
+                <span>{{ event.venue }}</span>
+                <span>{{ event.start_datetime[:16].replace('T', ' ') }}</span>
+            </div>
+            <div class="event-card-actions">
+                {% if event.status == 'pending' %}
+                <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin.admin_delete_event', event_id=event.id) }}" style="display:inline;" onsubmit="return confirm('Delete this event permanently? This also removes its registrations.');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state"><h3>No events found</h3></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>Welcome back, {{ session.name }}</h1>
+    <a href="{{ url_for('student.events_list') }}" class="btn btn-primary">Browse Events</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ upcoming_count }}</div><div class="stat-label">Upcoming registrations</div></div>
+    <div class="stat-card"><div class="stat-value">{{ total_registrations }}</div><div class="stat-label">Total registrations</div></div>
+    <div class="stat-card"><div class="stat-value">{{ unread_notifications }}</div><div class="stat-label">Unread notifications</div></div>
+</div>
+
+<div class="section-header"><h2>Newest events</h2></div>
+{% if recent_events %}
+    {% for event in recent_events %}
+    <div class="event-card">
+        <div class="event-card-body">
+            <div class="event-card-title"><a href="{{ url_for('student.event_detail', event_id=event.id) }}">{{ event.title }}</a></div>
+            <div class="event-card-meta">
+                <span class="tag-pill tag-pill-status-{{ compute_time_status(event) }}">{{ compute_time_status(event)|capitalize }}</span>
+                <span>{{ event.venue }}</span>
+                <span>{{ event.start_datetime[:16].replace('T', ' ') }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state"><h3>No events yet</h3><p>Check back soon.</p></div>
+{% endif %}
+{% endblock %}

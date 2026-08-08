@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit Event" if event else "Create Event" }}{% endblock %}
+{% block content %}
+<h1>{{ "Edit Event" if event else "Create New Event" }}</h1>
+
+<div class="card" style="max-width:720px;">
+<form method="POST" enctype="multipart/form-data" data-validate>
+    <div class="form-group">
+        <label for="title">Event Title</label>
+        <input type="text" id="title" name="title" value="{{ event.title if event else '' }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description">{{ event.description if event else '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="category_id">Category</label>
+            <select id="category_id" name="category_id">
+                <option value="">-- None --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if event and event.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="mode">Mode</label>
+            <select id="mode" name="mode">
+                <option value="offline" {% if event and event.mode == 'offline' %}selected{% endif %}>Offline</option>
+                <option value="online" {% if event and event.mode == 'online' %}selected{% endif %}>Online</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="venue">Venue</label>
+        <input type="text" id="venue" name="venue" value="{{ event.venue if event else '' }}" required>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="start_datetime">Start Date &amp; Time</label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" value="{{ event.start_datetime if event else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="end_datetime">End Date &amp; Time</label>
+            <input type="datetime-local" id="end_datetime" name="end_datetime" value="{{ event.end_datetime if event else '' }}" required>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="registration_deadline">Registration Deadline</label>
+        <input type="datetime-local" id="registration_deadline" name="registration_deadline" value="{{ event.registration_deadline if event else '' }}" required>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="max_participants">Maximum Participants</label>
+            <input type="number" id="max_participants" name="max_participants" min="1" value="{{ event.max_participants if event else 50 }}" required>
+        </div>
+        <div class="form-group">
+            <label for="tags">Tags (space-separated)</label>
+            <input type="text" id="tags" name="tags" value="{{ event.tags if event else '' }}" placeholder="e.g. coding hackathon ai">
+        </div>
+    </div>
+
+    <div class="form-group checkbox-row">
+        <input type="checkbox" id="is_paid" name="is_paid" {% if event and event.is_paid %}checked{% endif %}>
+        <label for="is_paid" style="margin-bottom:0;">This is a paid event</label>
+    </div>
+    <div class="form-group">
+        <label for="price">Price (Rs., if paid)</label>
+        <input type="number" id="price" name="price" min="0" step="0.01" value="{{ event.price if event else 0 }}">
+    </div>
+
+    <div class="form-group">
+        <label for="poster">Event Poster (image)</label>
+        <input type="file" id="poster" name="poster" accept=".png,.jpg,.jpeg,.gif,.webp">
+        {% if event and event.poster_filename %}
+        <p class="form-hint">Current poster: {{ event.poster_filename }}</p>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ "Save Changes" if event else "Create Event (as Draft)" }}</button>
+    <a href="{{ url_for('organizer.dashboard') }}" class="btn btn-outline">Cancel</a>
+</form>
+</div>
+{% endblock %}

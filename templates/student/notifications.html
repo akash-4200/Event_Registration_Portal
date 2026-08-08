@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<h1>Notifications</h1>
+{% if notifications %}
+    {% for n in notifications %}
+    <div class="card" style="{{ '' if n.is_read else 'border-left: 3px solid var(--accent);' }}">
+        <p class="mb-0">{{ n.message }}</p>
+        <p class="text-muted mono" style="font-size:0.8rem; margin-top:6px;">{{ n.created_at }}</p>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state"><h3>No notifications yet</h3></div>
+{% endif %}
+{% endblock %}

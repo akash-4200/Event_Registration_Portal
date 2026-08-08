@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Event Registration Portal{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>Every campus event, one ticket stub away.</h1>
+    <p>Discover events, register in a click, and walk in with a QR ticket. Organizers manage the whole lifecycle -- from draft to attendance -- without a spreadsheet in sight.</p>
+    <div class="hero-actions">
+        {% if logged_in %}
+            <a href="{{ url_for('student.events_list') }}" class="btn btn-primary">Browse Events</a>
+        {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Log In</a>
+        {% endif %}
+    </div>
+</section>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-value">01</div>
+        <div class="stat-label">Register for an event and get a QR ticket instantly</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">02</div>
+        <div class="stat-label">Organizers scan your ticket at check-in</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">03</div>
+        <div class="stat-label">Attend, rate the event, and download your certificate</div>
+    </div>
+</div>
+{% endblock %}

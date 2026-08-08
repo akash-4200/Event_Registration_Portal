@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Participants{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>Participants: {{ event.title }}</h1>
+    <a href="{{ url_for('organizer.export_participants', event_id=event.id) }}" class="btn btn-outline">Export CSV</a>
+</div>
+
+<form method="GET" class="search-filter-bar">
+    <div class="form-group">
+        <label for="q">Search by name or email</label>
+        <input type="text" id="q" name="q" value="{{ search }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if participants %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Ticket</th><th>Attended</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for p in participants %}
+        <tr>
+            <td>{{ p.name }}</td>
+            <td>{{ p.email }}</td>
+            <td>{{ p.department }}</td>
+            <td><span class="tag-pill tag-pill-status-{{ 'published' if p.status == 'confirmed' else ('pending' if p.status == 'waitlisted' else 'cancelled') }}">{{ p.status|capitalize }}</span></td>
+            <td class="mono">{{ p.ticket_code }}</td>
+            <td>{{ "Yes" if p.attended else "No" }}</td>
+            <td>
+                {% if not p.attended and p.status == 'confirmed' %}
+                <form method="POST" action="{{ url_for('organizer.mark_attendance', event_id=event.id) }}" style="display:inline;">
+                    <input type="hidden" name="registration_id" value="{{ p.id }}">
+                    <button type="submit" class="btn btn-outline btn-sm">Mark Attended</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state"><h3>No participants yet</h3></div>
+{% endif %}
+{% endblock %}

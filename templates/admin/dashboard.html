@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<h1>Admin Dashboard</h1>
+
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ counts.students }}</div><div class="stat-label">Students</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.organizers }}</div><div class="stat-label">Organizers</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.total_events }}</div><div class="stat-label">Total events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.pending_events }}</div><div class="stat-label">Pending approval</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.active_events }}</div><div class="stat-label">Active events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.completed_events }}</div><div class="stat-label">Completed events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ counts.total_registrations }}</div><div class="stat-label">Total registrations</div></div>
+</div>
+
+<div class="section-header">
+    <h2>Pending Approval</h2>
+    <a href="{{ url_for('admin.manage_events', status='pending') }}" class="btn btn-outline btn-sm">View All</a>
+</div>
+
+{% if pending_events %}
+    {% for event in pending_events %}
+    <div class="event-card">
+        <div class="event-card-body">
+            <div class="event-card-title">{{ event.title }}</div>
+            <div class="event-card-meta">
+                <span>By {{ event.organizer_name }}</span>
+                <span>{{ event.venue }}</span>
+                <span>{{ event.start_datetime[:16].replace('T', ' ') }}</span>
+            </div>
+            <div class="event-card-actions">
+                <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state"><h3>Nothing pending</h3><p>All caught up.</p></div>
+{% endif %}
+{% endblock %}

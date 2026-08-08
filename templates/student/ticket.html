@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Your Ticket{% endblock %}
+{% block content %}
+<h1 class="text-center">Your Ticket</h1>
+
+<div class="ticket">
+    <div class="ticket-main">
+        <div class="ticket-title">{{ reg.title }}</div>
+        <div class="ticket-meta-row"><strong>Venue:</strong>&nbsp;{{ reg.venue }}</div>
+        <div class="ticket-meta-row"><strong>Starts:</strong>&nbsp;{{ reg.start_datetime[:16].replace('T', ' ') }}</div>
+        <div class="ticket-meta-row"><strong>Attendee:</strong>&nbsp;{{ session.name }}</div>
+        <div class="ticket-meta-row"><strong>Status:</strong>&nbsp;{{ reg.status|capitalize }}</div>
+        <p class="form-hint">Show the QR code at check-in. The organizer will scan it to mark your attendance.</p>
+    </div>
+    <div class="ticket-stub">
+        <img src="{{ url_for('serve_upload', filename='qrcodes/' ~ reg.ticket_code ~ '.png') }}" alt="QR code for ticket {{ reg.ticket_code }}">
+        <div class="ticket-code">{{ reg.ticket_code }}</div>
+    </div>
+</div>
+
+<div class="text-center">
+    <a href="{{ url_for('student.receipt', registration_id=reg.id) }}" class="btn btn-outline">View Receipt</a>
+    <a href="{{ url_for('student.my_registrations') }}" class="btn btn-outline">Back to My Registrations</a>
+</div>
+{% endblock %}

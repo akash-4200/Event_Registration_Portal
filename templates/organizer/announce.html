@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Send Announcement{% endblock %}
+{% block content %}
+<h1>Announce: {{ event.title }}</h1>
+<div class="card auth-card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="e.g. Venue changed to Room 302" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Send to All Registered Participants</button>
+    </form>
+</div>
+{% endblock %}

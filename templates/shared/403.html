@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Access Denied{% endblock %}
+{% block content %}
+<div class="empty-state">
+    <h3>403 -- Access denied</h3>
+    <p>You don't have permission to view this page with your current role.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Go home</a>
+</div>
+{% endblock %}

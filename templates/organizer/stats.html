@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Event Stats{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<h1>Stats: {{ event.title }}</h1>
+
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ confirmed }}</div><div class="stat-label">Confirmed</div></div>
+    <div class="stat-card"><div class="stat-value">{{ waitlisted }}</div><div class="stat-label">Waitlisted</div></div>
+    <div class="stat-card"><div class="stat-value">{{ cancelled }}</div><div class="stat-label">Cancelled</div></div>
+    <div class="stat-card"><div class="stat-value">{{ attended }}</div><div class="stat-label">Attended</div></div>
+    <div class="stat-card">
+        <div class="stat-value">{{ "%.1f"|format(rating_row.avg_rating) if rating_row.avg_rating else "-" }}</div>
+        <div class="stat-label">Avg rating ({{ rating_row.count }} reviews)</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Registrations Over Time</h3>
+    <canvas id="regChart" height="100"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('regChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ daily | map(attribute='day') | list | tojson }},
+            datasets: [{
+                label: 'Registrations',
+                data: {{ daily | map(attribute='count') | list | tojson }},
+                borderColor: '#6B2D5C',
+                backgroundColor: 'rgba(107, 45, 92, 0.15)',
+                tension: 0.3,
+                fill: true,
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+</script>
+{% endblock %}

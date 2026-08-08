@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Organizer Dashboard{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>My Events</h1>
+    <a href="{{ url_for('organizer.create_event') }}" class="btn btn-primary">+ New Event</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ stats.total_events }}</div><div class="stat-label">Total events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.pending }}</div><div class="stat-label">Awaiting approval</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.published }}</div><div class="stat-label">Published</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.total_participants }}</div><div class="stat-label">Total participants</div></div>
+</div>
+
+{% if events %}
+    {% for event in events %}
+    <div class="event-card">
+        <div class="event-card-body">
+            <div class="event-card-title">{{ event.title }}</div>
+            <div class="event-card-meta">
+                <span class="tag-pill tag-pill-status-{{ event.status }}">{{ event.status|capitalize }}</span>
+                {% if event.category_name %}<span class="tag-pill">{{ event.category_name }}</span>{% endif %}
+                <span>{{ event.venue }}</span>
+                <span>{{ event.start_datetime[:16].replace('T', ' ') }}</span>
+                <span>{{ event.confirmed_count }}/{{ event.max_participants }} registered</span>
+            </div>
+            <div class="event-card-actions">
+                <a href="{{ url_for('organizer.edit_event', event_id=event.id) }}" class="btn btn-outline btn-sm">Edit</a>
+                <a href="{{ url_for('organizer.participants', event_id=event.id) }}" class="btn btn-outline btn-sm">Participants</a>
+                <a href="{{ url_for('organizer.stats', event_id=event.id) }}" class="btn btn-outline btn-sm">Stats</a>
+
+                {% if event.status == 'draft' %}
+                    <form method="POST" action="{{ url_for('organizer.publish_event', event_id=event.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-primary btn-sm">Submit for Approval</button>
+                    </form>
+                {% elif event.status == 'published' %}
+                    <a href="{{ url_for('organizer.scan_attendance_page', event_id=event.id) }}" class="btn btn-accent btn-sm">Scan Attendance</a>
+                    <a href="{{ url_for('organizer.announce', event_id=event.id) }}" class="btn btn-outline btn-sm">Announce</a>
+                    <form method="POST" action="{{ url_for('organizer.unpublish_event', event_id=event.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Unpublish</button>
+                    </form>
+                {% elif event.status == 'rejected' %}
+                    <span class="text-muted" style="font-size:0.85rem;">Rejected -- edit and resubmit</span>
+                {% endif %}
+
+                {% if event.confirmed_count == 0 %}
+                <form method="POST" action="{{ url_for('organizer.delete_event', event_id=event.id) }}" style="display:inline;" onsubmit="return confirm('Delete this event permanently?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <h3>No events yet</h3>
+        <p>Create your first event to get started.</p>
+        <a href="{{ url_for('organizer.create_event') }}" class="btn btn-primary">+ New Event</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,175 @@
+"""
+utils.py
+--------
+Small, self-contained helper functions used across blueprints:
+file upload validation, QR code generation, CSV export, .ics calendar
+file generation, PDF certificate generation, activity logging, and
+in-app notifications.
+
+Keeping these here (rather than duplicating logic in each blueprint)
+is what lets student/, organizer/, and admin/ routes stay focused on
+request handling instead of re-implementing the same file/QR/export code.
+"""
+
+from __future__ import annotations
+
+import os
+import io
+import csv
+import uuid
+from datetime import datetime, timedelta
+
+import qrcode
+from flask import current_app
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import landscape, A4
+
+from db import execute
+
+
+# --------------------------------------------------------------------------- #
+# File upload validation
+# --------------------------------------------------------------------------- #
+def allowed_file(filename: str) -> bool:
+    if "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in current_app.config["ALLOWED_IMAGE_EXTENSIONS"]
+
+
+# --------------------------------------------------------------------------- #
+# Ticket codes + QR codes
+# --------------------------------------------------------------------------- #
+def generate_ticket_code() -> str:
+    return uuid.uuid4().hex[:12].upper()
+
+
+def generate_qr_code(ticket_code: str) -> str:
+    """
+    Encodes the ticket code into a QR PNG saved under static/uploads/qrcodes/.
+    Returns the filename (not the full path) to store in the database.
+    """
+    filename = f"{ticket_code}.png"
+    path = os.path.join(current_app.config["QRCODE_FOLDER"], filename)
+
+    img = qrcode.make(ticket_code)
+    img.save(path)
+    return filename
+
+
+# --------------------------------------------------------------------------- #
+# CSV export (participant lists)
+# --------------------------------------------------------------------------- #
+def export_participants_csv(rows) -> io.BytesIO:
+    """
+    Builds an in-memory CSV file from participant rows and returns a
+    BytesIO buffer ready to be sent as a file download.
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Name", "Email", "Department", "Status", "Registered At", "Attended"])
+
+    for row in rows:
+        writer.writerow([
+            row["name"], row["email"], row["department"],
+            row["status"], row["registered_at"], "Yes" if row["attended"] else "No",
+        ])
+
+    buffer = io.BytesIO(output.getvalue().encode("utf-8"))
+    buffer.seek(0)
+    return buffer
+
+
+# --------------------------------------------------------------------------- #
+# Calendar (.ics) file generation -- lightweight, no external API needed
+# --------------------------------------------------------------------------- #
+def generate_ics(event) -> str:
+    """Returns the text content of a minimal .ics calendar file for one event."""
+    def to_ics_datetime(dt_str: str) -> str:
+        dt = datetime.fromisoformat(dt_str)
+        return dt.strftime("%Y%m%dT%H%M%S")
+
+    return (
+        "BEGIN:VCALENDAR\r\n"
+        "VERSION:2.0\r\n"
+        "BEGIN:VEVENT\r\n"
+        f"UID:{event['id']}@event-portal\r\n"
+        f"SUMMARY:{event['title']}\r\n"
+        f"DTSTART:{to_ics_datetime(event['start_datetime'])}\r\n"
+        f"DTEND:{to_ics_datetime(event['end_datetime'])}\r\n"
+        f"LOCATION:{event['venue']}\r\n"
+        f"DESCRIPTION:{event['description'][:200]}\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Certificate generation (PDF)
+# --------------------------------------------------------------------------- #
+def generate_certificate_pdf(student_name: str, event_title: str, event_date: str) -> str:
+    """
+    Generates a simple certificate-of-participation PDF and returns the
+    filename saved under static/uploads/certificates/.
+    """
+    filename = f"certificate_{uuid.uuid4().hex[:8]}.pdf"
+    path = os.path.join(current_app.config["CERTIFICATE_FOLDER"], filename)
+
+    page_size = landscape(A4)
+    c = canvas.Canvas(path, pagesize=page_size)
+    width, height = page_size
+
+    c.setFont("Helvetica-Bold", 28)
+    c.drawCentredString(width / 2, height - 120, "Certificate of Participation")
+
+    c.setFont("Helvetica", 16)
+    c.drawCentredString(width / 2, height - 200, "This certifies that")
+
+    c.setFont("Helvetica-Bold", 22)
+    c.drawCentredString(width / 2, height - 240, student_name)
+
+    c.setFont("Helvetica", 16)
+    c.drawCentredString(width / 2, height - 280, "successfully participated in")
+
+    c.setFont("Helvetica-Bold", 20)
+    c.drawCentredString(width / 2, height - 320, event_title)
+
+    c.setFont("Helvetica", 14)
+    c.drawCentredString(width / 2, height - 360, f"held on {event_date}")
+
+    c.setFont("Helvetica-Oblique", 11)
+    c.drawCentredString(width / 2, 60, "Generated by Event Registration Portal")
+
+    c.showPage()
+    c.save()
+    return filename
+
+
+# --------------------------------------------------------------------------- #
+# Activity logging (Security: audit trail)
+# --------------------------------------------------------------------------- #
+def log_activity(user_id: int | None, action: str, details: str = "") -> None:
+    execute(
+        "INSERT INTO activity_logs (user_id, action, details) VALUES (?, ?, ?)",
+        (user_id, action, details),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# In-app notifications
+# --------------------------------------------------------------------------- #
+def create_notification(user_id: int, message: str) -> None:
+    execute(
+        "INSERT INTO notifications (user_id, message) VALUES (?, ?)",
+        (user_id, message),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Password reset tokens
+# --------------------------------------------------------------------------- #
+def generate_reset_token() -> tuple[str, str]:
+    """Returns (token, iso-format expiry string) for a password reset."""
+    token = uuid.uuid4().hex
+    expiry = (datetime.utcnow() + timedelta(minutes=30)).isoformat()
+    return token, expiry

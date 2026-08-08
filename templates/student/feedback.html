@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Rate {{ event.title }}{% endblock %}
+{% block content %}
+<div class="card auth-card">
+    <h2>Rate: {{ event.title }}</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label>Your Rating</label>
+            <div class="star-rating" id="star-rating">
+                {% for i in range(1, 6) %}
+                <button type="button" data-rating-star="{{ i }}"
+                        class="{{ 'active' if existing and existing.rating and i <= existing.rating }}"
+                        onclick="setRating({{ i }}, 'rating-input')">&#9733;</button>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="rating-input" name="rating" value="{{ existing.rating if existing else 0 }}">
+        </div>
+        <div class="form-group">
+            <label for="comment">Comments (optional)</label>
+            <textarea id="comment" name="comment" placeholder="What did you think?">{{ existing.comment if existing else '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Submit Feedback</button>
+    </form>
+</div>
+{% endblock %}

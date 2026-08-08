@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="card auth-card">
+    <h2>My Profile</h2>
+    <form method="POST" data-validate>
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" value="{{ user.name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" value="{{ user.email }}" disabled>
+            <p class="form-hint">Email cannot be changed. Contact an admin if this needs updating.</p>
+        </div>
+        <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" name="department" value="{{ user.department }}">
+        </div>
+        <div class="form-group">
+            <label>Role</label>
+            <span class="tag-pill">{{ user.role }}</span>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+    <hr class="divider">
+    <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline btn-block">Change Password</a>
+</div>
+{% endblock %}

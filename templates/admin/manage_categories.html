@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Manage Categories{% endblock %}
+{% block content %}
+<h1>Manage Categories</h1>
+
+<div class="card auth-card">
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">New Category Name</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Add Category</button>
+    </form>
+</div>
+
+{% if categories %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Name</th><th>Events Using It</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for cat in categories %}
+        <tr>
+            <td>{{ cat.name }}</td>
+            <td>{{ cat.event_count }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin.delete_category', category_id=cat.id) }}" onsubmit="return confirm('Delete category {{ cat.name }}?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Reports & Analytics{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<h1>Reports &amp; Analytics</h1>
+
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ totals.total_users }}</div><div class="stat-label">Total registered users</div></div>
+    <div class="stat-card"><div class="stat-value">{{ totals.total_events }}</div><div class="stat-label">Total events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ totals.active_events }}</div><div class="stat-label">Active events</div></div>
+    <div class="stat-card"><div class="stat-value">{{ totals.completed_events }}</div><div class="stat-label">Completed events</div></div>
+</div>
+
+<div class="card">
+    <h3>Monthly Registration Trend</h3>
+    <canvas id="trendChart" height="90"></canvas>
+</div>
+
+<div class="card">
+    <h3>Event-wise Registration Report (Top 10)</h3>
+    <canvas id="eventRegChart" height="110"></canvas>
+</div>
+
+<div class="card">
+    <h3>Department-wise Participation</h3>
+    {% if department_participation %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Department</th><th>Registrations</th></tr></thead>
+        <tbody>
+        {% for row in department_participation %}
+            <tr><td>{{ row.department }}</td><td>{{ row.count }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}
+    <p class="text-muted">No department data yet.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Attendance Report</h3>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Event</th><th>Registered</th><th>Attended</th><th>Attendance Rate</th></tr></thead>
+        <tbody>
+        {% for row in attendance_report %}
+            <tr>
+                <td>{{ row.title }}</td>
+                <td>{{ row.total_registered }}</td>
+                <td>{{ row.total_attended }}</td>
+                <td>{{ "%.0f"|format((row.total_attended / row.total_registered * 100) if row.total_registered else 0) }}%</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<div class="card">
+    <h3>Feedback Analysis</h3>
+    {% if feedback_summary %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Event</th><th>Avg Rating</th><th>Reviews</th></tr></thead>
+        <tbody>
+        {% for row in feedback_summary %}
+            <tr>
+                <td>{{ row.title }}</td>
+                <td class="rating-stars">&#9733; {{ "%.1f"|format(row.avg_rating) }}</td>
+                <td>{{ row.review_count }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}
+    <p class="text-muted">No feedback submitted yet.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Most Popular Events</h3>
+    <ol>
+    {% for row in most_popular %}
+        <li>{{ row.title }} -- {{ row.count }} registrations</li>
+    {% endfor %}
+    </ol>
+</div>
+
+<script>
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: {{ monthly_trend | map(attribute='month') | list | tojson }},
+            datasets: [{
+                label: 'Registrations',
+                data: {{ monthly_trend | map(attribute='count') | list | tojson }},
+                borderColor: '#6B2D5C', backgroundColor: 'rgba(107,45,92,0.15)', fill: true, tension: 0.3,
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    new Chart(document.getElementById('eventRegChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ event_registrations | map(attribute='title') | list | tojson }},
+            datasets: [{
+                label: 'Registrations',
+                data: {{ event_registrations | map(attribute='registration_count') | list | tojson }},
+                backgroundColor: '#D99B2B',
+            }]
+        },
+        options: { responsive: true, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+</script>
+{% endblock %}

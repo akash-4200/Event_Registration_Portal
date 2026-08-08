@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Log In{% endblock %}
+{% block content %}
+<div class="card auth-card">
+    <h2>Log in</h2>
+    <form method="POST" data-validate>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+    </form>
+    <p class="text-center" style="margin-top:16px;">
+        <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
+    </p>
+    <hr class="divider">
+    <p class="text-center text-muted mb-0">
+        Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a>
+    </p>
+
+    <hr class="divider">
+    <p class="text-muted" style="font-size:0.8rem;">
+        Demo accounts (see seed.py): admin@events.com / admin1234 &middot;
+        priya.organizer@events.com / organizer123 &middot;
+        aisha.student@events.com / student1234
+    </p>
+</div>
+{% endblock %}

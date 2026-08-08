@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Browse Events{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>{{ "My Favorites" if is_favorites_page is defined else "Browse Events" }}</h1>
+</div>
+
+{% if is_favorites_page is not defined %}
+<form method="GET" class="search-filter-bar">
+    <div class="form-group">
+        <label for="q">Search</label>
+        <input type="text" id="q" name="q" placeholder="Event, venue, organizer, tag..." value="{{ filters.get('q', '') }}">
+    </div>
+    <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+            <option value="">All</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if filters.get('category')|string == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="mode">Mode</label>
+        <select id="mode" name="mode">
+            <option value="">All</option>
+            <option value="online" {% if filters.get('mode') == 'online' %}selected{% endif %}>Online</option>
+            <option value="offline" {% if filters.get('mode') == 'offline' %}selected{% endif %}>Offline</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="paid">Price</label>
+        <select id="paid" name="paid">
+            <option value="">All</option>
+            <option value="free" {% if filters.get('paid') == 'free' %}selected{% endif %}>Free</option>
+            <option value="paid" {% if filters.get('paid') == 'paid' %}selected{% endif %}>Paid</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="time_status">Status</label>
+        <select id="time_status" name="time_status">
+            <option value="">All</option>
+            <option value="upcoming" {% if filters.get('time_status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
+            <option value="ongoing" {% if filters.get('time_status') == 'ongoing' %}selected{% endif %}>Ongoing</option>
+            <option value="completed" {% if filters.get('time_status') == 'completed' %}selected{% endif %}>Completed</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Apply</button>
+    <a href="{{ url_for('student.events_list') }}" class="btn btn-outline">Reset</a>
+</form>
+{% endif %}
+
+{% if events %}
+    {% for event in events %}
+    <div class="event-card">
+        <div class="event-card-body">
+            <div class="event-card-title"><a href="{{ url_for('student.event_detail', event_id=event.id) }}">{{ event.title }}</a></div>
+            <div class="event-card-meta">
+                <span class="tag-pill tag-pill-status-{{ compute_time_status(event) }}">{{ compute_time_status(event)|capitalize }}</span>
+                {% if event.category_name %}<span class="tag-pill">{{ event.category_name }}</span>{% endif %}
+                <span class="tag-pill-accent tag-pill">{{ "Paid - Rs." ~ event.price|int if event.is_paid else "Free" }}</span>
+                <span>{{ event.venue }} &middot; {{ "Online" if event.mode == "online" else "Offline" }}</span>
+            </div>
+            <div class="event-card-meta">
+                <span>{{ event.start_datetime[:16].replace('T', ' ') }}</span>
+                <span>{{ seats_taken(event.id) }}/{{ event.max_participants }} seats filled</span>
+            </div>
+            <div class="event-card-actions">
+                <a href="{{ url_for('student.event_detail', event_id=event.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                <form method="POST" action="{{ url_for('student.toggle_bookmark', event_id=event.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">
+                        {{ "&#9733; Favorited"|safe if event.id in bookmarked_ids else "&#9734; Favorite"|safe }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <h3>No events found</h3>
+        <p>Try adjusting your search or filters.</p>
+    </div>
+{% endif %}
+{% endblock %}

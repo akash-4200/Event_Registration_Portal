@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Manage {{ role|capitalize }}s{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h1>Manage {{ role|capitalize }}s</h1>
+</div>
+
+<form method="GET" class="search-filter-bar">
+    <div class="form-group">
+        <label for="q">Search by name or email</label>
+        <input type="text" id="q" name="q" value="{{ search }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if users %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for u in users %}
+        <tr>
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.department }}</td>
+            <td>
+                {% if u.is_blocked %}
+                    <span class="tag-pill tag-pill-status-rejected">Blocked</span>
+                {% else %}
+                    <span class="tag-pill tag-pill-status-published">Active</span>
+                {% endif %}
+            </td>
+            <td class="mono">{{ u.created_at[:10] }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin.toggle_block_user', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('{{ 'Unblock' if u.is_blocked else 'Block' }} {{ u.name }}?');">
+                    <button type="submit" class="btn btn-outline btn-sm">{{ "Unblock" if u.is_blocked else "Block" }}</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.admin_reset_password', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Reset password for {{ u.name }}?');">
+                    <button type="submit" class="btn btn-outline btn-sm">Reset Password</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state"><h3>No {{ role }}s found</h3></div>
+{% endif %}
+{% endblock %}

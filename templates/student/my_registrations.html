@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Registrations{% endblock %}
+{% block content %}
+<h1>My Registrations</h1>
+
+{% if registrations %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Event</th><th>Venue</th><th>Date</th><th>Status</th><th>Attended</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for reg in registrations %}
+        <tr>
+            <td><a href="{{ url_for('student.event_detail', event_id=reg.event_id) }}">{{ reg.title }}</a></td>
+            <td>{{ reg.venue }}</td>
+            <td>{{ reg.start_datetime[:16].replace('T', ' ') }}</td>
+            <td><span class="tag-pill tag-pill-status-{{ 'published' if reg.status == 'confirmed' else ('pending' if reg.status == 'waitlisted' else 'cancelled') }}">{{ reg.status|capitalize }}</span></td>
+            <td>{{ "Yes" if reg.attended else "No" }}</td>
+            <td>
+                {% if reg.status == 'confirmed' %}
+                    <a href="{{ url_for('student.ticket', registration_id=reg.id) }}" class="btn btn-outline btn-sm">Ticket</a>
+                    <a href="{{ url_for('student.receipt', registration_id=reg.id) }}" class="btn btn-outline btn-sm">Receipt</a>
+                {% endif %}
+                {% if reg.attended %}
+                    <a href="{{ url_for('student.certificate', event_id=reg.event_id) }}" class="btn btn-accent btn-sm">Certificate</a>
+                    <a href="{{ url_for('student.feedback', event_id=reg.event_id) }}" class="btn btn-outline btn-sm">Rate Event</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+    <h3>No registrations yet</h3>
+    <p>Browse events and register for the ones you're interested in.</p>
+    <a href="{{ url_for('student.events_list') }}" class="btn btn-primary">Browse Events</a>
+</div>
+{% endif %}
+{% endblock %}

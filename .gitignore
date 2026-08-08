@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Local database and uploaded files (Render uses its own persistent disk
+# for these in production -- see render.yaml / DEPLOYMENT.md)
+instance/
+uploads/
+
+# Environment variables (never commit real secrets)
+.env
+
+# Editor/OS
+.vscode/
+.DS_Store

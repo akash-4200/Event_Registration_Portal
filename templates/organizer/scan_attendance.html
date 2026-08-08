@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Scan Attendance{% endblock %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+{% block content %}
+<h1>Scan Attendance: {{ event.title }}</h1>
+<p class="text-muted">Point a participant's QR ticket at the camera. Requires camera permission and HTTPS (or localhost) in the browser.</p>
+
+<div class="card" style="max-width:480px; margin:0 auto;">
+    <div id="qr-reader" style="width:100%;"></div>
+    <div id="scan-result" class="form-hint" style="margin-top:12px; font-size:1rem;"></div>
+</div>
+
+<div class="text-center" style="margin-top:16px;">
+    <a href="{{ url_for('organizer.participants', event_id=event.id) }}" class="btn btn-outline">Back to Participants</a>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    const resultDiv = document.getElementById("scan-result");
+    let lastScanned = null;
+    let lastScanTime = 0;
+
+    function onScanSuccess(decodedText) {
+        const now = Date.now();
+        // Debounce: ignore the same code scanned again within 3 seconds
+        if (decodedText === lastScanned && now - lastScanTime < 3000) return;
+        lastScanned = decodedText;
+        lastScanTime = now;
+
+        fetch("{{ url_for('organizer.scan_attendance_api', event_id=event.id) }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticket_code: decodedText }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                resultDiv.textContent = data.message;
+                resultDiv.style.color = data.success ? "var(--success)" : "var(--danger)";
+            })
+            .catch(() => {
+                resultDiv.textContent = "Network error while marking attendance.";
+                resultDiv.style.color = "var(--danger)";
+            });
+    }
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    Html5Qrcode.getCameras().then((cameras) => {
+        if (cameras && cameras.length) {
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 220 },
+                onScanSuccess
+            );
+        } else {
+            resultDiv.textContent = "No camera found on this device.";
+        }
+    }).catch(() => {
+        resultDiv.textContent = "Camera access denied or unavailable. Use manual attendance marking instead.";
+    });
+</script>
+{% endblock %}
